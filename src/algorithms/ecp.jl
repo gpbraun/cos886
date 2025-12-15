@@ -53,7 +53,7 @@ function solve_ecp(inst::Instance, params::ECPParams = ECPParams())::Results
 
         mp_status = termination_status(mp.model)
         if !(mp_status in (MOI.OPTIMAL, MOI.TIME_LIMIT))
-            error("Mestre falhou: $(t_status)")
+            error("Mestre falhou: $(mp_status)")
         end
         if mp_status == MOI.TIME_LIMIT || primal_status(mp.model) != MOI.FEASIBLE_POINT
             break
