@@ -1,0 +1,9 @@
+{
+  "editor.rulers": [88],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "code-runner.runInTerminal": true,
+  "code-runner.ignoreSelection": true
+}
