@@ -12,9 +12,6 @@ using Dates
 const GRB_ENV = Gurobi.Env()
 const GRB_OPT = () -> Gurobi.Optimizer(GRB_ENV)
 
-# -----------------------
-# Config geral do teste
-# -----------------------
 const TIME_LIMIT = 200.0
 const MAX_GAP = 1e-3
 const SILENT = true
@@ -35,18 +32,6 @@ const SPECS = [
     (n = 50, p = 10, k = 15),
 ]
 
-# -----------------------
-# Helpers
-# -----------------------
-const SEP = repeat("=", 75)
-
-function fmt_val(x)
-    return @sprintf("%.2f", x)
-end
-
-# -----------------------
-# Execução
-# -----------------------
 out_path = joinpath(@__DIR__, "experiments.txt")
 
 open(out_path, "w") do io
@@ -68,11 +53,13 @@ open(out_path, "w") do io
             delta = DELTA,
         )
 
-        println(io, SEP)
+        println(io, repeat("=", 75))
         @printf(io, "#%d. n = %d  p = %d  k = %d  seed = %d\n\n", idx, n, p, k, seed)
         flush(io)
 
-        # ---------- ECP ----------
+        # ============================================================
+        # ECP
+        # ============================================================
         res_ecp = Cos886.solve(
             inst;
             method = :ecp,
@@ -86,14 +73,16 @@ open(out_path, "w") do io
         @printf(
             io,
             "[ ECP ] lb = %-10s  ub = %-10s  iters = %-6d  time = %6.2f\n",
-            fmt_val(res_ecp.lb),
-            fmt_val(res_ecp.ub),
+            @sprintf("%.2f", res_ecp.lb),
+            @sprintf("%.2f", res_ecp.ub),
             res_ecp.iters,
             res_ecp.time
         )
         flush(io)
 
-        # ---------- OA ----------
+        # ============================================================
+        # OA
+        # ============================================================
         res_oa = Cos886.solve(
             inst;
             method = :oa,
@@ -107,14 +96,16 @@ open(out_path, "w") do io
         @printf(
             io,
             "[ OA  ] lb = %-10s  ub = %-10s  iters = %-6d  time = %6.2f\n",
-            fmt_val(res_oa.lb),
-            fmt_val(res_oa.ub),
+            @sprintf("%.2f", res_oa.lb),
+            @sprintf("%.2f", res_oa.ub),
             res_oa.iters,
             res_oa.time
         )
         flush(io)
 
-        # ---------- BB1 (sem usercuts) ----------
+        # ============================================================
+        # CALLBACK: BB (sem UserCuts)
+        # ============================================================
         res_bb1 = Cos886.solve(
             inst;
             method = :bb,
@@ -129,14 +120,16 @@ open(out_path, "w") do io
         @printf(
             io,
             "[ BB1 ] lb = %-10s  ub = %-10s  nodes = %-6d  time = %6.2f\n",
-            fmt_val(res_bb1.lb),
-            fmt_val(res_bb1.ub),
+            @sprintf("%.2f", res_bb1.lb),
+            @sprintf("%.2f", res_bb1.ub),
             res_bb1.nodes,
             res_bb1.time
         )
         flush(io)
 
-        # ---------- BB2 (com usercuts) ----------
+        # ============================================================
+        # CALLBACK: BB (com UserCuts)
+        # ============================================================
         res_bb2 = Cos886.solve(
             inst;
             method = :bb,
@@ -151,8 +144,8 @@ open(out_path, "w") do io
         @printf(
             io,
             "[ BB2 ] lb = %-10s  ub = %-10s  nodes = %-6d  time = %6.2f\n",
-            fmt_val(res_bb2.lb),
-            fmt_val(res_bb2.ub),
+            @sprintf("%.2f", res_bb2.lb),
+            @sprintf("%.2f", res_bb2.ub),
             res_bb2.nodes,
             res_bb2.time
         )
@@ -161,8 +154,6 @@ open(out_path, "w") do io
         println(io)
         GC.gc()
     end
-
-    return println(io, SEP)
 end
 
 println("OK: resultados em $(out_path)")

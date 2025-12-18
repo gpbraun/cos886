@@ -41,45 +41,13 @@ Base.@kwdef mutable struct BBState
     _uc_in_node::Int = 0
 end
 
-@inline function _affine_map(v)::Tuple{MOI.VariableIndex,Float64,Float64}
-    # Retorna (var_index, scale, shift) tal que:
-    #   value_exposed = shift + scale * value(var_index)
-    f = JuMP.moi_function(v)
-
-    if f isa MOI.SingleVariable
-        return (f.variable, 1.0, 0.0)
-    elseif f isa MOI.ScalarAffineFunction{Float64}
-        # precisa ser 1 termo: shift + scale * var
-        length(f.terms) == 1 ||
-            error("HeuristicSolution exige expr afim com 1 termo (shift + scale*var).")
-        term = f.terms[1]
-        return (term.variable, term.coefficient, f.constant)
-    else
-        error("HeuristicSolution: tipo não suportado em _affine_map: $(typeof(f)).")
-    end
-end
-
-"""
-Adiciona: corte t >= g'x + alpha
-"""
-@inline function build_supcut(mp::Master, g::Vector{<:Real}, alpha::Real)
-    return @build_constraint(mp.t >= dot(g, mp.x) + alpha)
-end
-
-"""
-Adiciona: corte válido para o epígrafo: t <= UB
-"""
-@inline function build_objcut(mp::Master, ub::Real)
-    return @build_constraint(mp.t <= ub)
-end
-
 """
 Resolve com o método: Branch-and-Bound baseado em PL/PNL (via callbacks).
 """
 function solve_bb(inst::Instance, params::BBParams = BBParams())::Results
     t0 = time()
     n = inst.n
-    cp = params.cut_policy  # <<< (novo) política de UserCuts
+    cp = params.cut_policy
 
     # ESTADO
     mp = Master(
@@ -142,7 +110,8 @@ function solve_bb(inst::Instance, params::BBParams = BBParams())::Results
         # Corte de viabilidade no próprio incumbente: lineariza em x_val
         f_val = f_and_grad!(ew, x_val, inst, g_val)
         if t_val + eps < f_val
-            con = build_supcut(mp, g_val, f_val - dot(g_val, x_val))
+            alpha = f_val - dot(g_val, x_val)
+            con = @build_constraint(mp.t >= dot(g_val, mp.x) + alpha)
             MOI.submit(mp.model, MOI.LazyConstraint(cb_data), con)
         end
 
@@ -174,7 +143,7 @@ function solve_bb(inst::Instance, params::BBParams = BBParams())::Results
         end
 
         if t_val + eps < rhs_val_star
-            con = build_supcut(mp, g_val, alpha_star)
+            con = @build_constraint(mp.t >= dot(g_val, mp.x) + alpha_star)
             MOI.submit(mp.model, MOI.LazyConstraint(cb_data), con)
         end
 
@@ -227,7 +196,8 @@ function solve_bb(inst::Instance, params::BBParams = BBParams())::Results
         (eff >= cp.min_efficacy) || return
 
         # 5) adiciona o corte
-        con = build_supcut(mp, g_val, f_val - dot(g_val, x_val))
+        alpha = f_val - dot(g_val, x_val)
+        con = @build_constraint(mp.t >= dot(g_val, mp.x) + alpha)
         MOI.submit(mp.model, MOI.UserCut(cb_data), con)
 
         state._uc_in_node += 1
