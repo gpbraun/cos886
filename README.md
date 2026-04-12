@@ -1,51 +1,53 @@
-# COS888
+# COS886
 
-Otimização Combinatória II
+Otimização Não-Linear Inteira Mista
 
 ## O projeto
 
-Resolução de problemas de localização de facilidade capacitada utilizando os métodos:
+Resolução do problema de D-design ótimo discreto (MINLP/MICP convexo), que consiste em selecionar $k$ dentre $n$ candidatos de forma a maximizar o critério D-otimalidade (log-det da matriz de informação de Fisher).
 
-1. Relax-and-Cut
-2. Programação por Restrições
-3. Decomposição de Benders
-4. Geração de Colunas
+Os métodos implementados são:
 
-## Experimentos SSCFL em Python
+1. **ECP** — Extended Cutting Planes
+2. **OA** — Outer Approximation
+3. **BB** — Branch-and-Bound com callbacks (sem e com User Cuts)
 
-Instale o pacote local:
+## Estrutura
+
+```
+src/
+  Cos886.jl          # módulo principal
+  core/
+    instance.jl      # struct Instance e geradores de instâncias
+    eval.jl          # avaliação do critério D-ótimo
+    utils.jl         # utilitários
+  models/
+    master.jl        # problema mestre (MILP)
+    subproblem.jl    # subproblema (SDP/SOCP)
+  algorithms/
+    ecp.jl           # Extended Cutting Planes
+    oa.jl            # Outer Approximation
+    bb.jl            # Branch-and-Bound com callbacks
+experiments/
+  experiments.jl     # script de experimentos
+```
+
+## Instalação
+
+Ative o ambiente Julia e instancie as dependências:
 
 ```shell
-pip install -e sscfl
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
 ```
+
+As licenças do Gurobi e do Mosek devem estar configuradas no ambiente.
+
+## Experimentos
 
 Para rodar os experimentos:
 
 ```shell
-sscfl_experiments
+julia experiments/experiments.jl
 ```
 
-Os resultados são registrados em: `out/sscfl_out.txt`.
-
-Observação: para ativar a liceça do CPLEX no ambiente Python é necessário executar o comando:
-
-```shell
-docplex config --upgrade /opt/ibm/ILOG/CPLEX_Studio2212
-```
-
-## Experimentos TSCFL em C++
-
-Primeiro faça o build:
-
-```shell
-cmake -S tscfl -B build
-cmake --build build
-```
-
-Para rodar os experimentos:
-
-```shell
-build/tscfl_experiments
-```
-
-Os resultados são registrados em: `out/tscfl_out.txt`.
+Os resultados são registrados em `experiments/experiments.txt`.
