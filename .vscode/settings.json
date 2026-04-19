@@ -1,8 +1,11 @@
 {
-  "editor.rulers": [88],
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
+  "[julia]": {
+    "editor.rulers": [88],
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "always"
+    }
   },
   "code-runner.runInTerminal": true,
   "code-runner.ignoreSelection": true
